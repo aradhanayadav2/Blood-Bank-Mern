@@ -15,7 +15,9 @@ import adminRoutes from "./routes/adminRoutes.js";
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin:process.env.Frontend_URL
+}));
 
 // DB
 connectDB();
