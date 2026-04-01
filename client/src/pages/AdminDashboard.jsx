@@ -9,16 +9,16 @@ export default function AdminDashboard() {
   const [donations, setDonations] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/admin/users")
+    axios.get(`${import.meta.env.VITE_API}/api/admin/users`)
       .then(res => setUsers(res.data));
 
-    axios.get("http://localhost:5000/api/admin/hospitals")
+    axios.get(`${import.meta.env.VITE_API}/api/admin/hospitals`)
       .then(res => setHospitals(res.data));
 
-    axios.get("http://localhost:5000/api/admin/requests")
+    axios.get(`${import.meta.env.VITE_API}/api/admin/requests`)
       .then(res => setRequests(res.data));
 
-    axios.get("http://localhost:5000/api/admin/donations")
+    axios.get(`${import.meta.env.VITE_API}/api/admin/donations`)
       .then(res => setDonations(res.data));
   }, []);
 

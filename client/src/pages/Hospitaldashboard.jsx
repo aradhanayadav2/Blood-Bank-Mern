@@ -15,7 +15,7 @@ export default function Hospitaldashboard() {
     if (!user?.name) return;
 
     axios
-      .get(`http://localhost:5000/api/inventory/${user.name}`)
+      .get(`${import.meta.env.VITE_API}/api/inventory/${user.name}`)
       .then((res) => setInventory(res.data))
       .catch((err) => console.log(err));
   }, [user]);
@@ -25,7 +25,7 @@ export default function Hospitaldashboard() {
     if (!user?.name) return;
 
     axios
-      .get(`http://localhost:5000/api/donations/hospital/${user.name}`)
+      .get(`${import.meta.env.VITE_API}/api/donations/hospital/${user.name}`)
       .then((res) => setDonations(res.data))
       .catch((err) => console.log(err));
   }, [user]);
@@ -34,7 +34,7 @@ export default function Hospitaldashboard() {
   useEffect(() => {
     if (!user?.city) return;
 
-    axios.get(`http://localhost:5000/api/requests/${user.city}/${user.name}`).then((res) => setRequests(res.data)).catch((err) => console.log(err));
+    axios.get(`${import.meta.env.VITE_API}/api/requests/${user.city}/${user.name}`).then((res) => setRequests(res.data)).catch((err) => console.log(err));
   }, [user]);
 
   // ✅ ACCEPT REQUEST
@@ -52,7 +52,7 @@ export default function Hospitaldashboard() {
 
     // ✅ If available → proceed
     await axios.put(
-      `http://localhost:5000/api/requests/accept/${request._id}`,
+      `${import.meta.env.VITE_API}/api/requests/accept/${request._id}`,
       { hospitalName: user.name }
     );
 
@@ -80,7 +80,7 @@ export default function Hospitaldashboard() {
   // ❌ REJECT REQUEST
   const rejectRequest = async (id) => {
     await axios.put(
-      `http://localhost:5000/api/requests/reject/${id}`
+      `${import.meta.env.VITE_API}/api/requests/reject/${id}`
     );
 
     alert("Request Rejected");

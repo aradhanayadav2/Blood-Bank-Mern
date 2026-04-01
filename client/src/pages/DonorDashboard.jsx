@@ -14,7 +14,7 @@ export default function DonorDashboard() {
     if (!user?.name) return;
 
     axios
-      .get(`http://localhost:5000/api/donations/${user.name}`)
+      .get(`${import.meta.env.VITE_API}/api/donations/${user.name}`)
       .then((res) => setDonations(res.data))
       .catch((err) => console.log(err));
   }, [user]);
@@ -24,7 +24,7 @@ export default function DonorDashboard() {
     if (!user?.name) return;
 
     axios
-      .get(`http://localhost:5000/api/requests/user/${user.name}`)
+      .get(`${import.meta.env.VITE_API}/api/requests/user/${user.name}`)
       .then((res) => setRequests(res.data))
       .catch((err) => console.log(err));
   }, [user]);

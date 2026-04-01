@@ -21,7 +21,7 @@ function Donor() {
   // 🔥 fetch hospitals
   useEffect(() => {
     axios
-      .get("http://localhost:5000/auth/hospitals")
+      .get(`${import.meta.env.VITE_API}/auth/hospitals`)
       .then((res) => setHospitals(res.data))
       .catch((err) => console.log(err));
   }, []);
@@ -38,17 +38,17 @@ function Donor() {
 
     try {
       // 1️⃣ Save donor
-      await axios.post("http://localhost:5000/api/donors", formData);
+      await axios.post(`${import.meta.env.VITE_API}/api/donors`, formData);
 
       // 2️⃣ Update inventory
-      await axios.post("http://localhost:5000/api/inventory", {
+      await axios.post(`${import.meta.env.VITE_API}/api/inventory`, {
         hospitalName: formData.hospitalName,
         bloodGroup: formData.bloodGroup,
         units: formData.units,
       });
 
       // 🔥 3️⃣ SAVE DONATION IN DB (IMPORTANT FIX)
-      await axios.post("http://localhost:5000/api/donations", {
+      await axios.post(`${import.meta.env.VITE_API}/api/donations`, {
         donorName: formData.name,
         bloodGroup: formData.bloodGroup,
         units: formData.units,

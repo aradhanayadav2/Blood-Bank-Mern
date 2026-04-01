@@ -12,7 +12,7 @@ export default function InventoryDashboard() {
     if (!user?.name) return;
 
     axios
-      .get(`http://localhost:5000/api/inventory/${user.name}`)
+      .get(`${import.meta.env.VITE_API}/api/inventory/${user.name}`)
       .then((res) => setInventory(res.data))
       .catch((err) => console.log(err));
   }, [user]);

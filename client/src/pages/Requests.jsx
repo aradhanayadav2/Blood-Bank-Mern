@@ -31,7 +31,7 @@ function Requests() {
     try {
       setLoading(true);
 
-      await axios.post("http://localhost:5000/api/requests", formData);
+      await axios.post(`${import.meta.env.VITE_API}/api/requests`, formData);
 
       alert("Request Submitted Successfully!");
 
