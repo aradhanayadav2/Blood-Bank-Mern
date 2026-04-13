@@ -1,29 +1,43 @@
-import React, { useState, useEffect, useContext } from "react";
+  
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { UserContextProvider } from "../context/UserContext";
 
 function Donor() {
-  const { user } = useContext(UserContextProvider);
-
   const [hospitals, setHospitals] = useState([]);
 
   const [formData, setFormData] = useState({
-    name: user?.name || "",
+    name: "",
     age: "",
-    bloodGroup: user?.bloodGroup || "",
-    phone: user?.phone || "",
-    city: user?.city || "",
+    bloodGroup: "",
+    phone: "",
+    city: "",
     hospitalName: "",
     units: "",
     lastDonationDate: "",
   });
 
-  // 🔥 fetch hospitals
+  // Fetch hospitals properly
   useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_API}/auth/hospitals`)
-      .then((res) => setHospitals(res.data))
-      .catch((err) => console.log(err));
+    const fetchHospitals = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API}/auth/hospitals`);
+        console.log("Hospitals API:", res.data);
+
+        // Ensure array format
+        if (Array.isArray(res.data)) {
+          setHospitals(res.data);
+        } else if (res.data.hospitals) {
+          setHospitals(res.data.hospitals);
+        } else {
+          setHospitals([]);
+        }
+      } catch (err) {
+        console.log(err);
+        setHospitals([]);
+      }
+    };
+
+    fetchHospitals();
   }, []);
 
   const handleChange = (e) => {
@@ -36,38 +50,44 @@ function Donor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      // 1️⃣ Save donor
-      await axios.post(`${import.meta.env.VITE_API}/api/donors`, formData);
+    if (!formData.hospitalName) {
+      alert("Please select a hospital");
+      return;
+    }
 
-      // 2️⃣ Update inventory
+    try {
+      await axios.post(`${import.meta.env.VITE_API}/api/donors`, {
+        ...formData,
+        age: Number(formData.age),
+        units: Number(formData.units),
+      });
+
       await axios.post(`${import.meta.env.VITE_API}/api/inventory`, {
         hospitalName: formData.hospitalName,
         bloodGroup: formData.bloodGroup,
-        units: formData.units,
+        units: Number(formData.units),
       });
 
-      // 🔥 3️⃣ SAVE DONATION IN DB (IMPORTANT FIX)
       await axios.post(`${import.meta.env.VITE_API}/api/donations`, {
         donorName: formData.name,
         bloodGroup: formData.bloodGroup,
-        units: formData.units,
+        units: Number(formData.units),
         hospitalName: formData.hospitalName,
       });
 
       alert("Blood Donated Successfully!");
 
+      // Reset form
       setFormData({
-        name: user?.name || "",
+        name: "",
         age: "",
-        bloodGroup: user?.bloodGroup || "",
-        phone: user?.phone || "",
-        city: user?.city || "",
+        bloodGroup: "",
+        phone: "",
+        city: "",
         hospitalName: "",
         units: "",
         lastDonationDate: "",
       });
-
     } catch (error) {
       console.log(error);
       alert("Error submitting donation");
@@ -76,35 +96,34 @@ function Donor() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      
       <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-2xl">
-        
         <h2 className="text-3xl font-bold text-center text-red-600 mb-6">
           Donate Blood
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Name */}
+          {/* Fully Editable Fields */}
           <input
             type="text"
+            name="name"
             value={formData.name}
-            readOnly
-            className="w-full p-3 border rounded-lg bg-gray-100"
+            onChange={handleChange}
+            placeholder="Enter Name"
+            required
+            className="w-full p-3 border rounded-lg"
           />
 
-          {/* Age */}
           <input
             type="number"
             name="age"
-            placeholder="Age"
+            placeholder="Enter Age"
             value={formData.age}
             onChange={handleChange}
             required
             className="w-full p-3 border rounded-lg"
           />
 
-          {/* Blood Group */}
           <select
             name="bloodGroup"
             value={formData.bloodGroup}
@@ -123,7 +142,6 @@ function Donor() {
             <option>AB-</option>
           </select>
 
-          {/* Units */}
           <input
             type="number"
             name="units"
@@ -134,7 +152,7 @@ function Donor() {
             className="w-full p-3 border rounded-lg"
           />
 
-          {/* 🏥 Hospital Dropdown */}
+          {/* FIXED Hospital Dropdown */}
           <select
             name="hospitalName"
             value={formData.hospitalName}
@@ -144,30 +162,37 @@ function Donor() {
           >
             <option value="">Select Hospital</option>
 
-            {hospitals.map((h, index) => (
-              <option key={index} value={h.name}>
-                {h.name} ({h.city})
-              </option>
-            ))}
+            {hospitals.length > 0 ? (
+              hospitals.map((h, index) => (
+                <option key={index} value={h.name || h.hospitalName}>
+                  {(h.name || h.hospitalName) + " - " + (h.city || "")}
+                </option>
+              ))
+            ) : (
+              <option disabled>No hospitals available</option>
+            )}
           </select>
 
-          {/* Phone */}
           <input
             type="text"
+            name="phone"
             value={formData.phone}
-            readOnly
-            className="w-full p-3 border rounded-lg bg-gray-100"
+            onChange={handleChange}
+            placeholder="Enter Phone"
+            required
+            className="w-full p-3 border rounded-lg"
           />
 
-          {/* City */}
           <input
             type="text"
+            name="city"
             value={formData.city}
-            readOnly
-            className="w-full p-3 border rounded-lg bg-gray-100"
+            onChange={handleChange}
+            placeholder="Enter City"
+            required
+            className="w-full p-3 border rounded-lg"
           />
 
-          {/* Last Donation */}
           <input
             type="date"
             name="lastDonationDate"
@@ -176,14 +201,12 @@ function Donor() {
             className="w-full p-3 border rounded-lg"
           />
 
-          {/* Submit */}
           <button
             type="submit"
             className="w-full bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition"
           >
             Donate Blood
           </button>
-
         </form>
       </div>
     </div>

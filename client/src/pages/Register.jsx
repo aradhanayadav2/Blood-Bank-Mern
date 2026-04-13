@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -11,7 +11,7 @@ export default function Register() {
     address: "",
     role: "",
   });
-
+  const navigate = useNavigate();
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -41,6 +41,7 @@ export default function Register() {
         address: "",
         role: "",
       });
+    navigate("/login")
     }
     console.log(response);
   };
@@ -105,7 +106,7 @@ export default function Register() {
             >
               <option value="">Select Blood Group</option>
               <option>A+</option>
-              <option>B+</option>
+              <option>B+</option>  
               <option>O+</option>
               <option>AB+</option>
               <option>A-</option>

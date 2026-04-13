@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { UserContextProvider } from "../context/UserContext";
+import { UserContext } from "../context/UserContext"; // ✅ FIX
 
 export default function InventoryDashboard() {
 
-  const { user } = useContext(UserContextProvider);
+  const { user } = useContext(UserContext); // ✅ FIX
+
   const [inventory, setInventory] = useState([]);
 
   // 🔥 Fetch inventory
@@ -17,7 +18,7 @@ export default function InventoryDashboard() {
       .catch((err) => console.log(err));
   }, [user]);
 
-  // 🔥 STATUS BASED CALCULATION (NEW LOGIC)
+  // 🔥 STATUS BASED CALCULATION
   const totalHealthy = inventory
     .filter(i => i.status === "healthy")
     .reduce((acc, i) => acc + i.units, 0);
@@ -33,32 +34,31 @@ export default function InventoryDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-black p-6">
 
-      {/* Title */}
       <h1 className="text-4xl font-bold text-white mb-10">
         🩸 Blood Inventory Dashboard
       </h1>
 
-      {/* 🔥 Stats Cards */}
+      {/* Stats */}
       <div className="grid md:grid-cols-3 gap-6 mb-10">
 
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-xl shadow-xl hover:scale-105 transition">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-xl shadow-xl">
           <p className="text-sm opacity-80">Healthy Blood Units</p>
           <h2 className="text-3xl font-bold mt-2">{totalHealthy}</h2>
         </div>
 
-        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-6 rounded-xl shadow-xl hover:scale-105 transition">
+        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-6 rounded-xl shadow-xl">
           <p className="text-sm opacity-80">Near Expiry</p>
           <h2 className="text-3xl font-bold mt-2">{totalNearExpiry}</h2>
         </div>
 
-        <div className="bg-gradient-to-r from-red-500 to-red-700 text-white p-6 rounded-xl shadow-xl hover:scale-105 transition">
+        <div className="bg-gradient-to-r from-red-500 to-red-700 text-white p-6 rounded-xl shadow-xl">
           <p className="text-sm opacity-80">Expired Blood</p>
           <h2 className="text-3xl font-bold mt-2">{totalExpired}</h2>
         </div>
 
       </div>
 
-      {/* 🔥 Inventory Table */}
+      {/* Table */}
       <div className="bg-white rounded-xl p-6 shadow-xl">
 
         <h2 className="text-2xl font-bold text-red-600 mb-6">
@@ -84,7 +84,6 @@ export default function InventoryDashboard() {
 
               {inventory.length > 0 ? (
                 inventory.map((item, index) => (
-
                   <tr key={index} className="border-b hover:bg-yellow-50">
 
                     <td className="p-3 font-bold text-red-600">
@@ -93,7 +92,6 @@ export default function InventoryDashboard() {
 
                     <td className="p-3">{item.units}</td>
 
-                    {/* 🔥 STATUS BADGE */}
                     <td className="p-3">
                       <span className={`px-3 py-1 rounded text-sm ${
                         item.status === "healthy"
@@ -121,7 +119,6 @@ export default function InventoryDashboard() {
                     <td className="p-3">{item.location || "-"}</td>
 
                   </tr>
-
                 ))
               ) : (
                 <tr>

@@ -1,33 +1,50 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { UserContextProvider } from "../context/UserContext";
+import { UserContext } from "../context/UserContext";
 
 export default function DonorDashboard() {
-
-  const { user } = useContext(UserContextProvider);
+  const { user } = useContext(UserContext);
 
   const [donations, setDonations] = useState([]);
   const [requests, setRequests] = useState([]);
 
-  // 🔥 Fetch donations from backend
+  const API = import.meta.env.VITE_API;
+
+  // 🔥 Fetch donations
   useEffect(() => {
-    if (!user?.name) return;
+    const fetchDonations = async () => {
+      if (!user?.name) return;
 
-    axios
-      .get(`${import.meta.env.VITE_API}/api/donations/${user.name}`)
-      .then((res) => setDonations(res.data))
-      .catch((err) => console.log(err));
-  }, [user]);
+      try {
+        const res = await axios.get(
+          `${API}/api/donations/${user.name}`
+        );
+        setDonations(res.data || []);
+      } catch (err) {
+        console.error("Error fetching donations:", err);
+      }
+    };
 
-  // 🔥 Fetch user requests
+    fetchDonations();
+  }, [user?.name]);
+
+  // 🔥 Fetch requests
   useEffect(() => {
-    if (!user?.name) return;
+    const fetchRequests = async () => {
+      if (!user?.name) return;
 
-    axios
-      .get(`${import.meta.env.VITE_API}/api/requests/user/${user.name}`)
-      .then((res) => setRequests(res.data))
-      .catch((err) => console.log(err));
-  }, [user]);
+      try {
+        const res = await axios.get(
+          `${API}/api/requests/user/${user.name}`
+        );
+        setRequests(res.data || []);
+      } catch (err) {
+        console.error("Error fetching requests:", err);
+      }
+    };
+
+    fetchRequests();
+  }, [user?.name]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-black p-6">
@@ -58,12 +75,14 @@ export default function DonorDashboard() {
 
         <div className="bg-red-600 text-white p-6 rounded-xl">
           <p>Blood Group</p>
-          <h2 className="text-3xl font-bold">{user?.bloodGroup}</h2>
+          <h2 className="text-3xl font-bold">
+            {user?.bloodGroup || "N/A"}
+          </h2>
         </div>
 
       </div>
 
-      {/* 🔥 REQUESTS TABLE */}
+      {/* REQUESTS TABLE */}
       <div className="bg-white rounded-xl p-6 shadow mb-10">
 
         <h2 className="text-2xl font-bold text-red-600 mb-6">
@@ -83,19 +102,21 @@ export default function DonorDashboard() {
 
           <tbody>
             {requests.length > 0 ? (
-              requests.map((r, i) => (
-                <tr key={i} className="border-b">
+              requests.map((r) => (
+                <tr key={r._id || r.id} className="border-b">
                   <td className="p-3">{r.patientName}</td>
                   <td className="p-3">{r.bloodGroup}</td>
                   <td className="p-3">{r.units}</td>
 
                   <td className="p-3">
-                    <span className={`px-3 py-1 rounded ${
-                      r.status === "accepted"
-                        ? "bg-green-200 text-green-700"
-                        : "bg-yellow-200 text-yellow-700"
-                    }`}>
-                      {r.status}
+                    <span
+                      className={`px-3 py-1 rounded ${
+                        r.status === "accepted"
+                          ? "bg-green-200 text-green-700"
+                          : "bg-yellow-200 text-yellow-700"
+                      }`}
+                    >
+                      {r.status || "pending"}
                     </span>
                   </td>
 
@@ -113,10 +134,9 @@ export default function DonorDashboard() {
             )}
           </tbody>
         </table>
-
       </div>
 
-      {/* 🔥 DONATION HISTORY */}
+      {/* DONATION HISTORY */}
       <div className="bg-white rounded-xl p-6 shadow">
 
         <h2 className="text-2xl font-bold text-red-600 mb-6">
@@ -136,10 +156,12 @@ export default function DonorDashboard() {
 
           <tbody>
             {donations.length > 0 ? (
-              donations.map((d, i) => (
-                <tr key={i} className="border-b">
+              donations.map((d) => (
+                <tr key={d._id || d.id} className="border-b">
                   <td className="p-3">
-                    {new Date(d.date).toLocaleDateString()}
+                    {d.date
+                      ? new Date(d.date).toLocaleDateString()
+                      : "N/A"}
                   </td>
                   <td className="p-3">{d.bloodGroup}</td>
                   <td className="p-3">{d.units}</td>
@@ -156,9 +178,7 @@ export default function DonorDashboard() {
           </tbody>
 
         </table>
-
       </div>
-
     </div>
   );
 }

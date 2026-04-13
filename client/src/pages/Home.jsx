@@ -24,11 +24,11 @@ export default function Home() {
             <div className="flex gap-4">
 
               <button className="bg-white text-red-600 px-7 py-3 rounded-lg font-semibold shadow hover:shadow-xl transition">
-                <Link to="/donor">Become a Donor</Link>
+                <Link to="/register">Become a Donor</Link>
               </button>
 
               <button className="bg-red-900 px-7 py-3 rounded-lg font-semibold shadow hover:bg-red-800 transition">
-               <Link to="/requests">Request Donor</Link>
+               <Link to="/register">Request Donor</Link>
               </button>
 
             </div>
@@ -247,7 +247,7 @@ export default function Home() {
         </p>
 
         <button className="bg-white text-red-600 px-8 py-3 rounded-lg font-semibold shadow hover:bg-red-100 transition">
-          Register Now
+          <Link to="/register">Register Now</Link>
         </button>
 
       </section>

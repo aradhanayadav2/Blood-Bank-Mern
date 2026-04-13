@@ -1,28 +1,42 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
-import { UserContextProvider } from "../context/UserContext";
+import { UserContext } from "../context/UserContext";
 
 function Requests() {
-  const { user } = useContext(UserContextProvider);
+  const { user } = useContext(UserContext);
 
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    hospitalName: user?.name || "",
+    hospitalName: "",
     bloodGroup: "",
     units: "",
     patientName: "",
     urgency: "",
     contact: "",
-    city: user?.city || "",
-    requestedBy: user?._id || "", // 🔥 future use (important)
+    city: "",
+    requestedBy: "",
   });
 
+  // ✅ Sync form data when user loads/changes
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        hospitalName: user.name || "",
+        city: user.city || "",
+        requestedBy: user._id || "",
+      }));
+    }
+  }, [user]);
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "units" ? Number(value) : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -31,23 +45,23 @@ function Requests() {
     try {
       setLoading(true);
 
-      await axios.post(`${import.meta.env.VITE_API}/api/requests`, formData);
+      await axios.post(
+        `${import.meta.env.VITE_API}/api/requests`,
+        formData
+      );
 
       alert("Request Submitted Successfully!");
 
-      setFormData({
-        hospitalName: user?.name || "",
+      setFormData((prev) => ({
+        ...prev,
         bloodGroup: "",
         units: "",
         patientName: "",
         urgency: "",
         contact: "",
-        city: user?.city || "",
-        requestedBy: user?._id || "",
-      });
-
+      }));
     } catch (error) {
-      console.log(error);
+      console.error(error);
       alert("Error submitting request");
     } finally {
       setLoading(false);
@@ -56,9 +70,7 @@ function Requests() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      
       <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-2xl">
-        
         <h2 className="text-3xl font-bold text-center text-red-600 mb-6">
           Blood Request Form
         </h2>
@@ -66,12 +78,13 @@ function Requests() {
         <form onSubmit={handleSubmit} className="space-y-4">
 
           {/* Hospital Name */}
-          <input
-            type="text"
-            value={formData.hospitalName}
-            readOnly
-            className="w-full p-3 border rounded-lg bg-gray-100"
-          />
+         <input
+           type="text"
+          value={formData.hospitalName}
+          placeholder="Hospital Name"
+          onChange={(e) => setFormData({ ...formData, hospitalName: e.target.value })}
+          className="w-full p-3 border rounded-lg"
+        />
 
           {/* Patient Name */}
           <input
@@ -140,23 +153,16 @@ function Requests() {
             className="w-full p-3 border rounded-lg"
           />
 
-          {/* Hidden Fields */}
-          <input type="hidden" name="city" value={formData.city} />
-          <input type="hidden" name="requestedBy" value={formData.requestedBy} />
-
           {/* Submit */}
           <button
             type="submit"
             disabled={loading}
             className={`w-full text-white p-3 rounded-lg transition ${
-              loading
-                ? "bg-gray-400"
-                : "bg-red-600 hover:bg-red-700"
+              loading ? "bg-gray-400" : "bg-red-600 hover:bg-red-700"
             }`}
           >
             {loading ? "Submitting..." : "Submit Request"}
           </button>
-
         </form>
       </div>
     </div>

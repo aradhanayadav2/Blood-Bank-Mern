@@ -1,10 +1,10 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { UserContextProvider } from "../context/UserContext";
+import { UserContext } from "../context/UserContext";
 
 export default function Hospitaldashboard() {
 
-  const { user } = useContext(UserContextProvider);
+  const { user } = useContext(UserContext);
 
   const [inventory, setInventory] = useState([]);
   const [donations, setDonations] = useState([]);
@@ -16,41 +16,65 @@ export default function Hospitaldashboard() {
 
     axios
       .get(`${import.meta.env.VITE_API}/api/inventory/${user.name}`)
-      .then((res) => setInventory(res.data))
+      .then((res) => setInventory(res.data || []))
       .catch((err) => console.log(err));
   }, [user]);
 
-  // 🔥 Fetch Donations received
+  // 🔥 Fetch Donations
   useEffect(() => {
     if (!user?.name) return;
 
     axios
       .get(`${import.meta.env.VITE_API}/api/donations/hospital/${user.name}`)
-      .then((res) => setDonations(res.data))
+      .then((res) => setDonations(res.data || []))
       .catch((err) => console.log(err));
   }, [user]);
 
-  // 🔥 Fetch Requests (same city)
+  // 🔥 Fetch Requests
   useEffect(() => {
-    if (!user?.city) return;
+    if (!user?.city || !user?.name) return;
 
-    axios.get(`${import.meta.env.VITE_API}/api/requests/${user.city}/${user.name}`).then((res) => setRequests(res.data)).catch((err) => console.log(err));
+    axios
+      .get(`${import.meta.env.VITE_API}/api/requests/${user.city}/${user.name}`)
+      .then((res) => setRequests(res.data || []))
+      .catch((err) => console.log(err));
   }, [user]);
 
+  // ===============================
+  // ✅ SAFE CALCULATIONS (FIXED)
+  // ===============================
+
+  const totalBloodUnits = inventory.reduce(
+    (acc, item) => acc + (item.units || 0),
+    0
+  );
+
+  const totalReceived = donations.reduce(
+    (acc, d) => acc + (d.units || 0),
+    0
+  );
+
+  const acceptedRequests = requests.filter(r => r.status === "accepted");
+  const pendingRequests = requests.filter(r => r.status === "pending");
+
+  const totalGiven = acceptedRequests.reduce(
+    (acc, r) => acc + (r.units || 0),
+    0
+  );
+
+  // ===============================
   // ✅ ACCEPT REQUEST
+  // ===============================
   const acceptRequest = async (request) => {
-    // 🔍 Find matching blood group in inventory
     const blood = inventory.find(
       (item) => item.bloodGroup === request.bloodGroup
     );
 
-    // ❌ If not available OR less units
-    if (!blood || blood.units < request.units) {
+    if (!blood || (blood.units || 0) < request.units) {
       alert("❌ Not enough blood units available!");
       return;
     }
 
-    // ✅ If available → proceed
     await axios.put(
       `${import.meta.env.VITE_API}/api/requests/accept/${request._id}`,
       { hospitalName: user.name }
@@ -58,7 +82,6 @@ export default function Hospitaldashboard() {
 
     alert("✅ Request Accepted");
 
-    // update UI
     setRequests((prev) =>
       prev.map((r) =>
         r._id === request._id
@@ -67,17 +90,18 @@ export default function Hospitaldashboard() {
       )
     );
 
-    // 🔥 OPTIONAL: reduce inventory in UI
     setInventory((prev) =>
       prev.map((item) =>
         item.bloodGroup === request.bloodGroup
-          ? { ...item, units: item.units - request.units }
+          ? { ...item, units: (item.units || 0) - request.units }
           : item
       )
     );
   };
 
+  // ===============================
   // ❌ REJECT REQUEST
+  // ===============================
   const rejectRequest = async (id) => {
     await axios.put(
       `${import.meta.env.VITE_API}/api/requests/reject/${id}`
@@ -92,6 +116,9 @@ export default function Hospitaldashboard() {
     );
   };
 
+  // ===============================
+  // UI
+  // ===============================
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-black p-6">
 
@@ -99,47 +126,32 @@ export default function Hospitaldashboard() {
         🩸 Hospital Dashboard
       </h1>
 
-      {/* 🔥 STATS CARDS */}
-      {/* 🔥 STATS CARDS */}
+      {/* STATS */}
       <div className="grid md:grid-cols-4 gap-6 mb-10">
 
-        {/* Total Blood Units */}
-        <div className="bg-gradient-to-r from-red-500 to-red-700 text-white p-6 rounded-xl shadow-xl">
+        <div className="bg-red-600 text-white p-6 rounded-xl">
           <p>Total Blood Units</p>
-          <h2 className="text-3xl font-bold">
-            {inventory.reduce((acc, item) => acc + item.units, 0)}
-          </h2>
+          <h2 className="text-3xl font-bold">{totalBloodUnits}</h2>
         </div>
 
-        {/* 💉 Total Donations Received (UNITS) */}
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-xl shadow-xl">
+        <div className="bg-green-600 text-white p-6 rounded-xl">
           <p>Blood Received</p>
-          <h2 className="text-3xl font-bold">
-            {donations.reduce((acc, d) => acc + d.units, 0)}
-          </h2>
+          <h2 className="text-3xl font-bold">{totalReceived}</h2>
         </div>
 
-        {/* 🏥 Blood Given (Accepted Requests) */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-xl shadow-xl">
+        <div className="bg-blue-600 text-white p-6 rounded-xl">
           <p>Blood Given</p>
-          <h2 className="text-3xl font-bold">
-            {requests
-              .filter(r => r.status === "accepted")
-              .reduce((acc, r) => acc + r.units, 0)}
-          </h2>
+          <h2 className="text-3xl font-bold">{totalGiven}</h2>
         </div>
 
-        {/* Pending Requests */}
-        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-6 rounded-xl shadow-xl">
+        <div className="bg-yellow-500 text-white p-6 rounded-xl">
           <p>Pending Requests</p>
-          <h2 className="text-3xl font-bold">
-            {requests.filter(r => r.status === "pending").length}
-          </h2>
+          <h2 className="text-3xl font-bold">{pendingRequests.length}</h2>
         </div>
 
       </div>
 
-      {/* 🔥 INVENTORY */}
+      {/* INVENTORY */}
       <div className="bg-white p-6 rounded-xl mb-10">
         <h2 className="text-xl font-bold text-red-600 mb-4">Inventory</h2>
 
@@ -153,7 +165,7 @@ export default function Hospitaldashboard() {
         </div>
       </div>
 
-      {/* 🔥 DONATIONS RECEIVED */}
+      {/* DONATIONS */}
       <div className="bg-white p-6 rounded-xl mb-10">
         <h2 className="text-xl font-bold text-red-600 mb-4">
           Donations Received
@@ -176,7 +188,7 @@ export default function Hospitaldashboard() {
                 <td className="p-2">{d.bloodGroup}</td>
                 <td className="p-2">{d.units}</td>
                 <td className="p-2">
-                  {new Date(d.date).toLocaleDateString()}
+                  {d.date ? new Date(d.date).toLocaleDateString() : "-"}
                 </td>
               </tr>
             ))}
@@ -184,53 +196,7 @@ export default function Hospitaldashboard() {
         </table>
       </div>
 
-      {/* 🔥 DONATIONS GIVEN (ACCEPTED REQUESTS) */}
-      <div className="bg-white p-6 rounded-xl mb-10">
-        <h2 className="text-xl font-bold text-red-600 mb-4">
-          Donations Given (Accepted Requests)
-        </h2>
-
-        <table className="w-full">
-          <thead className="bg-red-100">
-            <tr>
-              <th className="p-2">Patient</th>
-              <th className="p-2">Blood</th>
-              <th className="p-2">Units</th>
-              <th className="p-2">Contact</th>
-              <th className="p-2">Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {requests.filter(r => r.status === "accepted").length > 0 ? (
-              requests
-                .filter(r => r.status === "accepted")
-                .map((r) => (
-                  <tr key={r._id} className="border-b">
-                    <td className="p-2">{r.patientName}</td>
-                    <td className="p-2">{r.bloodGroup}</td>
-                    <td className="p-2">{r.units}</td>
-                    <td className="p-2">{r.contact}</td>
-
-                    <td className="p-2">
-                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded">
-                        Delivered
-                      </span>
-                    </td>
-                  </tr>
-                ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="text-center p-4">
-                  No Donations Given Yet
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 🔥 REQUESTS */}
+      {/* REQUESTS */}
       <div className="bg-white p-6 rounded-xl">
         <h2 className="text-xl font-bold text-red-600 mb-4">
           Blood Requests
@@ -250,10 +216,10 @@ export default function Hospitaldashboard() {
           <tbody>
             {requests.map((r) => (
               <tr key={r._id} className="border-b">
+
                 <td className="p-2">{r.patientName}</td>
                 <td className="p-2">{r.bloodGroup}</td>
                 <td className="p-2">{r.units}</td>
-
                 <td className="p-2">{r.status}</td>
 
                 <td className="p-2">
@@ -275,11 +241,11 @@ export default function Hospitaldashboard() {
                     </>
                   )}
                 </td>
+
               </tr>
             ))}
           </tbody>
         </table>
-
       </div>
 
     </div>
