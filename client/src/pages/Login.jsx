@@ -98,6 +98,11 @@ export default function Login() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 value={form.password}
               />
+              <div className="text-right mt-2">
+  <Link to="/forgot-password" className="text-sm text-red-500">
+    Forgot Password?
+  </Link>
+</div>
             </div>
 
             {/* BUTTON */}

@@ -14,6 +14,8 @@ import DonorDashboard from "./pages/DonorDashboard";
 import About from "./pages/About ";
 import Contact from "./pages/Contact";
 import UserContext from "./context/UserContext";
+import ForgotPassword from "./pages/Forgetpassword";
+import ResetPassword from "./pages/ResetPassword";
 
 
 function App() {
@@ -32,6 +34,8 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
+               <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/register" element={<Register />} />
               <Route path="/donordashboard" element={<DonorDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
